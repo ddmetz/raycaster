@@ -1,0 +1,52 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>TITLE</title>
+    <style>
+        html,
+        body {
+            margin: 0px;
+            padding: 0px;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: absolute;
+            background: black;
+            z-index: 0;
+        }
+        #glcanvas {
+            margin: auto;
+            padding: 0px;
+            width: 1280px;
+            height: 720px;
+            overflow: hidden;    
+            display: block; 
+            background: rgb(25, 25, 25);
+            z-index: 0;
+        }
+        h1 {
+            font-family: sans-serif;
+            margin:auto;
+            color: white;
+        }
+        div {
+            display: flex;
+            justify-content: center;
+            padding: 24px;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <div>
+        <h1 id="header">Use wasd or arrow keys to move and turn</h1>
+    </div>
+    <canvas id="glcanvas" tabindex='1'></canvas>
+    <!-- Minified and statically hosted version of https://github.com/not-fl3/miniquad/blob/master/native/sapp-wasm/js/gl.js -->
+    <script src="https://not-fl3.github.io/miniquad-samples/gl.js"></script>
+    <script>load("raycaster.wasm");</script> <!-- Your compiled wasm file -->
+</body>
+
+</html>

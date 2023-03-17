@@ -40,7 +40,7 @@ async fn main() {
 
         state.update();
 
-        macroquad_profiler::profiler(Default::default());
+        //macroquad_profiler::profiler(Default::default());
 
         if Button::new("TOGGLE PIXELATION")
         .position(vec2(0., SCREEN_H-20.0))
