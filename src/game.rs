@@ -10,7 +10,7 @@ const FOV: f32 = 1.0; // in radians
 //const COLOR_1: Color = color_u8!(110, 93, 143, 255);
 const COLOR_2: Color = color_u8!(198, 183, 190, 255);
 //const COLOR_2: Color = color_u8!(148, 133, 140, 255);
-//const COLOR_3: Color = color_u8!(137, 141 ,168, 255);
+const COLOR_3: Color = color_u8!(20, 20 , 20, 255);
 const COLOR_4: Color = color_u8!(148, 131, 139, 255);
 
 const MAP: [[u8; 16]; 16] = [
@@ -53,7 +53,7 @@ pub struct GameState {
     pos_x: f32, // player x position
     pos_y: f32, // player y position
     angle: f32, // player angle in radians
-    camera: PlayerCamera,
+    pub camera: PlayerCamera,
     textures: Textures,
 }
 
@@ -130,6 +130,7 @@ impl GameState {
     }
 
     fn draw_view(&self) {
+        draw_rectangle(0., self.camera.h/2., self.camera.w, self.camera.h/2., COLOR_3);
         let ray_step = self.camera.fov / self.camera.w;
         let mut ray_angle = self.angle - (self.camera.fov * 0.5);
 
@@ -139,8 +140,8 @@ impl GameState {
             let mut dist_x = 0.0;
             let mut dist_y = 0.0;
 
-            let ray_cos = (ray_angle).cos() / 300.;
-            let ray_sin = (ray_angle).sin() / 300.;
+            let ray_cos = (ray_angle).cos() / 200.;
+            let ray_sin = (ray_angle).sin() / 200.;
 
             let mut texture = 0;
             while texture < 4 {
@@ -187,10 +188,10 @@ impl GameState {
     fn draw_floor_slice(&self, x: i32, height: f32, ray_angle: f32) {
         let dir_cos = ray_angle.cos();
         let dir_sin = ray_angle.sin();
-        let step_y = (4. * self.camera.scale).max(1.) as usize;
-        let dest_length = 8. * self.camera.scale;
+        let step_y = (3. * self.camera.scale).max(1.) as usize;
+        let dest_length = 10. * self.camera.scale;
 
-        for y in (height as i32..self.camera.h as i32).step_by(step_y) {
+        for y in (height as i32 - 1..self.camera.h as i32).step_by(step_y) {
             let mut distance = self.camera.w / (2.0 * y as f32 - self.camera.h);
             distance = distance / (self.angle - ray_angle).cos();
 
