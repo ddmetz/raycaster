@@ -1,16 +1,13 @@
+use crate::textures::Textures;
 use macroquad::prelude::*;
+
 // Magic numbers
 const MOVE_SPEED: f32 = 4.0;
 const ROTATE_SPEED: f32 = 3.5;
-const SCREEN_W: f32 = 1280.;
-const SCREEN_H: f32 = 720.;
-const SCREEN_SCALE: f32 = 1.0;
-const SCALED_SCREEN_W: f32 = 1280. * SCREEN_SCALE;
-const SCALED_SCREEN_H: f32 = 720. * SCREEN_SCALE;
 const FOV: f32 = 1.0; // in radians
 
 // Colors
-const COLOR_1: Color = color_u8!(110, 93, 143, 255);
+//const COLOR_1: Color = color_u8!(110, 93, 143, 255);
 const COLOR_2: Color = color_u8!(198, 183, 190, 255);
 //const COLOR_2: Color = color_u8!(148, 133, 140, 255);
 //const COLOR_3: Color = color_u8!(137, 141 ,168, 255);
@@ -35,34 +32,6 @@ const MAP: [[u8; 16]; 16] = [
     [4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
 ];
 
-pub struct Textures {
-    brick: Texture2D,
-    wood: Texture2D,
-    colorstone: Texture2D,
-    roundstone: Texture2D,
-    greystone: Texture2D,
-}
-impl Textures {
-    pub fn new() -> Textures {
-        let brick = Texture2D::from_file_with_format(include_bytes!("../resources/brick.png"), None);
-        let wood = Texture2D::from_file_with_format(include_bytes!("../resources/wood.png"), None);
-        let colorstone =
-            Texture2D::from_file_with_format(include_bytes!("../resources/colorstone.png"), None);
-        let roundstone =
-            Texture2D::from_file_with_format(include_bytes!("../resources/roundstone.png"), None);
-        let greystone =
-            Texture2D::from_file_with_format(include_bytes!("../resources/greystone.png"), None);
-        build_textures_atlas();
-        Textures {
-            brick,
-            wood,
-            colorstone,
-            roundstone,
-            greystone,
-        }
-    }
-}
-
 pub struct PlayerCamera {
     scale: f32,
     w: f32,
@@ -78,16 +47,14 @@ impl PlayerCamera {
             fov: FOV,
         }
     }
-    pub fn update(new_scale: f32, new_w: f32, new_h: f32) {
-
-    }
 }
 
 pub struct GameState {
     pos_x: f32, // player x position
     pos_y: f32, // player y position
     angle: f32, // player angle in radians
-    pub camera: PlayerCamera,
+    camera: PlayerCamera,
+    textures: Textures,
 }
 
 impl GameState {
@@ -96,19 +63,15 @@ impl GameState {
             pos_x: 13.0,
             pos_y: 2.1,
             angle: 2.0,
-            camera: PlayerCamera {
-                scale,
-                w: camera_w,
-                h: camera_h,
-                fov: FOV
-            }
+            camera: PlayerCamera::new(scale, camera_w, camera_h),
+            textures: Textures::new(),
         }
     }
 
     /// Updates player position then renders new frame
-    pub fn update(&mut self, textures: &Textures) {
+    pub fn update(&mut self) {
         self.check_inputs();
-        self.draw_view(textures);
+        self.draw_view();
     }
 
     fn check_inputs(&mut self) {
@@ -166,13 +129,11 @@ impl GameState {
         // self.prev_mouse_pos = mouse_position();
     }
 
-    fn draw_view(&self, textures: &Textures) {
+    fn draw_view(&self) {
         let ray_step = self.camera.fov / self.camera.w;
         let mut ray_angle = self.angle - (self.camera.fov * 0.5);
 
         for x in 0..self.camera.w as i32 + 1 {
-            //self.draw_background_slice(x, ray_angle);
-
             let mut ray_x = self.pos_x;
             let mut ray_y = self.pos_y;
             let mut dist_x = 0.0;
@@ -195,13 +156,13 @@ impl GameState {
             let start_y = (self.camera.h / 2.0) as f32 - (height / 2.) as f32;
 
             let texture = if texture == 4 {
-                textures.brick
+                self.textures.brick
             } else if texture == 5 {
-                textures.wood
+                self.textures.wood
             } else if texture == 6 {
-                textures.colorstone
+                self.textures.colorstone
             } else {
-                textures.roundstone
+                self.textures.roundstone
             };
 
             let params = DrawTextureParams {
@@ -217,18 +178,18 @@ impl GameState {
 
             draw_texture_ex(texture, x as f32, start_y as f32, COLOR_2, params);
 
-            self.draw_floor_slice(x, start_y + height, ray_angle, textures);
+            self.draw_floor_slice(x, start_y + height, ray_angle);
 
             ray_angle += ray_step;
         }
     }
 
-    fn draw_floor_slice(&self, x: i32, height: f32, ray_angle: f32, textures: &Textures) {
+    fn draw_floor_slice(&self, x: i32, height: f32, ray_angle: f32) {
         let dir_cos = ray_angle.cos();
         let dir_sin = ray_angle.sin();
-        let step_y = (3. * self.camera.scale) as usize;
-        let dest_length = 6. * self.camera.scale;
-        
+        let step_y = (4. * self.camera.scale).max(1.) as usize;
+        let dest_length = 8. * self.camera.scale;
+
         for y in (height as i32..self.camera.h as i32).step_by(step_y) {
             let mut distance = self.camera.w / (2.0 * y as f32 - self.camera.h);
             distance = distance / (self.angle - ray_angle).cos();
@@ -244,13 +205,13 @@ impl GameState {
             };
 
             let texture = if texture == 0 {
-                textures.roundstone
+                self.textures.roundstone
             } else if texture == 1 {
-                textures.greystone
+                self.textures.greystone
             } else if texture == 2 {
-                textures.colorstone
+                self.textures.colorstone
             } else {
-                textures.brick
+                self.textures.brick
             };
 
             let texture_x = tilex.fract() * texture.width() as f32;
